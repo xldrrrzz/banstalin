@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>БАН СТАЛИН | Официальный сайт</title>
+
+    <!-- Подключаем Firebase SDK (база данных в реальном времени) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --bg-color: #0e0e11;
@@ -244,6 +249,32 @@
         body.is-admin .delete-btn {
             display: block;
         }
+
+        /* Стили для кнопки Телеграма в левом нижнем углу */
+        .tg-link {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 2px solid var(--accent);
+            padding: 12px 20px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            transition: 0.2s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tg-link:hover {
+            background-color: var(--accent);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -303,23 +334,60 @@
 </div>
 
 <script>
-    // ТВОЙ ПАРОЛЬ ОТ АДМИНКИ
     const ADMIN_PASSWORD = "fuckradadiona";
-
     let isAdmin = false;
 
-    // Стартовые посты
-    const defaultPosts = [
-        {
-            id: 1,
-            title: "Основание - 19.01.2026 ",
-            text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.",
-            category: "squad",
-            image: ""
-        }
-    ];
+    // --- НАСТРОЙКА FIREBASE ---
+    // Используем публичный тестовый проект для мгновенного старта базы данных
+    const firebaseConfig = {
+        apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
+        authDomain: "banstalinbd.firebaseapp.com",
+        projectId: "banstalinbd",
+        storageBucket: "banstalinbd.firebasestorage.app",
+        messagingSenderId: "177781168542",
+        appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
+        measurementId: "G-3F0JK75D6H"
 
-    let posts = JSON.parse(localStorage.getItem('stalinSquadPosts')) || defaultPosts;
+    };
+
+    // Инициализация Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    let posts = [];
+
+    // Живая загрузка постов из базы данных (обновляется у всех автоматически)
+    function initRealtimeDatabase() {
+        db.collection("posts").orderBy("id", "desc").onSnapshot((snapshot) => {
+            posts = [];
+            snapshot.forEach((doc) => {
+                posts.push(doc.data());
+            });
+
+            // Если в базе вообще пусто, добавляем стартовый пост
+            if (posts.length === 0) {
+                const initialPost = {
+                    id: 1,
+                    title: "Основание - 19.01.2026",
+                    text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.",
+                    category: "squad",
+                    image: ""
+                };
+                db.collection("posts").doc(String(initialPost.id)).set(initialPost);
+            } else {
+                renderPosts();
+            }
+        }, (error) => {
+            console.log("Ошибка базы данных, переключаемся на локальную память:", error);
+            // Защита: если нет сети или базы, берем из localStorage чтобы сайт не ломался
+            posts = JSON.parse(localStorage.getItem('stalinSquadPosts')) || [
+                { id: 1, title: "Основание - 19.01.2026", text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.", category: "squad", image: "" }
+            ];
+            renderPosts();
+        });
+    }
 
     // Функция отрисовки постов по двум отдельным блокам
     function renderPosts() {
@@ -392,7 +460,7 @@
         document.getElementById('admin-panel').style.display = 'none';
     }
 
-    // Добавление нового поста с картинкой
+    // Добавление нового поста с отправкой в базу данных
     function addPost() {
         const title = document.getElementById('post-title').value.trim();
         const text = document.getElementById('post-text').value.trim();
@@ -416,42 +484,44 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 newPost.image = e.target.result;
-                saveAndRender(newPost);
+                saveToDatabase(newPost);
             };
             reader.readAsDataURL(imageInput.files[0]);
         } else {
-            saveAndRender(newPost);
+            saveToDatabase(newPost);
         }
     }
 
-    function saveAndRender(post) {
-        posts.unshift(post);
-        try {
-            localStorage.setItem('stalinSquadPosts', JSON.stringify(posts));
-        } catch (e) {
-            alert("Ошибка: фотка слишком тяжелая или на ней рада для памяти браузера! Попробуй сжать/вырезать жир её.");
-            posts.shift();
-            return;
-        }
-
-        document.getElementById('post-title').value = '';
-        document.getElementById('post-text').value = '';
-        document.getElementById('post-image').value = '';
-
-        renderPosts();
+    // Сохранение поста в Firebase Firestore
+    function saveToDatabase(post) {
+        db.collection("posts").doc(String(post.id)).set(post)
+            .then(() => {
+                document.getElementById('post-title').value = '';
+                document.getElementById('post-text').value = '';
+                document.getElementById('post-image').value = '';
+            })
+            .catch((error) => {
+                alert("Ошибка загрузки в базу (возможно, фотка слишком тяжелая): " + error.message);
+            });
     }
 
-    // Удаление поста
+    // Удаление поста из базы данных
     function deletePost(id) {
         if (confirm("Точно удалить этот пост?")) {
-            posts = posts.filter(p => p.id !== id);
-            localStorage.setItem('stalinSquadPosts', JSON.stringify(posts));
-            renderPosts();
+            db.collection("posts").doc(String(id)).delete().catch((error) => {
+                alert("Ошибка удаления: " + error.message);
+            });
         }
     }
 
-    // Запускаем отрисовку при открытии сайта
-    renderPosts();
+    // Запускаем подключение к базе при открытии сайта
+    initRealtimeDatabase();
 </script>
+
+<!-- Ссылка на ТГК в левом нижнем углу -->
+<a href="https://t.me/banstalin" target="_blank" class="tg-link">
+    ✈️ НАШ ТГК
+</a>
+
 </body>
 </html>
