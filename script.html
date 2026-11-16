@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>БАН СТАЛИН | Официальный сайт</title>
+    <style>
+        :root {
+            --bg-color: #0e0e11;
+            --card-bg: #18181f;
+            --accent: #7a1c1c; /* Глубокий бордовый */
+            --accent-hover: #9e2424;
+            --text-main: #f0f0f5;
+            --text-muted: #9a9aa6;
+            --border-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        /* Шапка */
+        header {
+            background: linear-gradient(135deg, #1a0b0b 0%, var(--bg-color) 100%);
+            border-bottom: 2px solid var(--accent);
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 15px rgba(122, 28, 28, 0.6);
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        /* Кнопка админки */
+        .admin-trigger {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid #2c2c38;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .admin-trigger:hover {
+            border-color: var(--accent);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Секция "О нас" */
+        .about-box {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--accent);
+            margin-bottom: 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        /* Админ-панель (скрыта по умолчанию) */
+        #admin-panel {
+            display: none;
+            background-color: #1e1518;
+            border: 2px solid var(--accent);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+        }
+
+        #admin-panel h2 {
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], textarea, input[type="file"], select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-color);
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-logout {
+            background-color: #333;
+            margin-left: 10px;
+        }
+
+        /* Заголовки секций */
+        .section-title {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2c2c38;
+            color: var(--text-main);
+        }
+
+        .enemies-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px dashed var(--accent);
+        }
+
+        .enemies-section .section-title {
+            color: #ff6b6b;
+            border-bottom-color: var(--accent);
+        }
+
+        .feed {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Особая рамка для карточек врагов */
+        .enemy-card {
+            border: 1px solid #5a1212;
+            background-color: #1c1416;
+        }
+
+        .post-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .post-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .post-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        .badge-enemy {
+            display: inline-block;
+            background: #5a1212;
+            color: #ff9999;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .delete-btn {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(200, 0, 0, 0.85);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        body.is-admin .delete-btn {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="admin-trigger" onclick="toggleAdminAuth()">Добавить пост💌</button>
+    <h1>БАН СТАЛИН</h1>
+    <p>Официанальный))) сайт бан сталин. Только уебища ебаные заслуживают тут находится.</p>
+</header>
+
+<div class="container">
+
+    <!-- Админ-панель -->
+    <div id="admin-panel">
+        <h2>Панель управления постами</h2>
+        <div class="form-group">
+            <label>Заголовок поста:</label>
+            <input type="text" id="post-title" placeholder="Например: Кто тут сын шалавы">
+        </div>
+        <div class="form-group">
+            <label>Текст / Описание:</label>
+            <textarea id="post-text" placeholder="Напиши сюда любую историю, цитату или инфу..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Куда добавить пост:</label>
+            <select id="post-category">
+                <option value="squad">Обычный пост сквада</option>
+                <option value="enemies">⚔️ Наши враги</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Выбрать фотку еблища</label>
+            <input type="file" id="post-image" accept="image/*">
+        </div>
+        <button class="btn" onclick="addPost()">Опубликовать</button>
+        <button class="btn btn-logout" onclick="logoutAdmin()">Выйти из админки</button>
+    </div>
+
+    <!-- Описание сквада -->
+    <div class="about-box">
+        <h3>Кто мы такие?</h3>
+        <p style="margin-top: 8px; color: var(--text-muted);">
+            Мы — <strong>бан сталин</strong>. Здесь собраны наши лучшие моменты, легендарные скрины, цитаты и состав. Хочешь добавить новый контент? Жми кнопку админки в правом верхнем углу (если знаешь пароль, конечно).
+        </p>
+    </div>
+
+    <!-- Блок 1: Основные посты -->
+    <h2 class="section-title">Посты сквада</h2>
+    <div class="feed" id="feed-squad"></div>
+
+    <!-- Блок 2: Наши враги -->
+    <div class="enemies-section">
+        <h2 class="section-title">⚔️ Наши враги</h2>
+        <div class="feed" id="feed-enemies"></div>
+    </div>
+
+</div>
+
+<script>
+    // ТВОЙ ПАРОЛЬ ОТ АДМИНКИ
+    const ADMIN_PASSWORD = "fuckradadiona";
+
+    let isAdmin = false;
+
+    // Стартовые посты
+    const defaultPosts = [
+        {
+            id: 1,
+            title: "Основание - 19.01.2026 ",
+            text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.",
+            category: "squad",
+            image: ""
+        }
+    ];
+
+    let posts = JSON.parse(localStorage.getItem('stalinSquadPosts')) || defaultPosts;
+
+    // Функция отрисовки постов по двум отдельным блокам
+    function renderPosts() {
+        const feedSquad = document.getElementById('feed-squad');
+        const feedEnemies = document.getElementById('feed-enemies');
+
+        feedSquad.innerHTML = '';
+        feedEnemies.innerHTML = '';
+
+        const squadPosts = posts.filter(p => p.category !== 'enemies');
+        const enemyPosts = posts.filter(p => p.category === 'enemies');
+
+        if (squadPosts.length === 0) {
+            feedSquad.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">Постов пока нет.</p>`;
+        } else {
+            squadPosts.forEach(post => feedSquad.appendChild(createPostCard(post, false)));
+        }
+
+        if (enemyPosts.length === 0) {
+            feedEnemies.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">Список врагов пока пуст.</p>`;
+        } else {
+            enemyPosts.forEach(post => feedEnemies.appendChild(createPostCard(post, true)));
+        }
+    }
+
+    // Создание HTML карточки
+    function createPostCard(post, isEnemy) {
+        const card = document.createElement('div');
+        card.className = isEnemy ? 'post-card enemy-card' : 'post-card';
+
+        let imageHTML = '';
+        if (post.image) {
+            imageHTML = `<img src="${post.image}" alt="Фото банстален">`;
+        }
+
+        let badgeHTML = isEnemy ? `<span class="badge-enemy">⚔️ Враг сквада</span>` : '';
+
+        card.innerHTML = `
+            <button class="delete-btn" onclick="deletePost(${post.id})">Удалить</button>
+            ${imageHTML}
+            <div class="post-content">
+                ${badgeHTML}
+                <h3 class="post-title">${post.title}</h3>
+                <p class="post-text">${post.text}</p>
+            </div>
+        `;
+        return card;
+    }
+
+    // Вход в админку по паролю
+    function toggleAdminAuth() {
+        if (isAdmin) {
+            alert("Ты уже в режиме админа еблан!");
+            return;
+        }
+        const inputPass = prompt("Введи пароль для поста:");
+        if (inputPass === ADMIN_PASSWORD) {
+            isAdmin = true;
+            document.body.classList.add('is-admin');
+            document.getElementById('admin-panel').style.display = 'block';
+        } else if (inputPass !== null) {
+            alert("Неверный пароль! Доступ запрещён сын хуесоса.");
+        }
+    }
+
+    // Выход из админки
+    function logoutAdmin() {
+        isAdmin = false;
+        document.body.classList.remove('is-admin');
+        document.getElementById('admin-panel').style.display = 'none';
+    }
+
+    // Добавление нового поста с картинкой
+    function addPost() {
+        const title = document.getElementById('post-title').value.trim();
+        const text = document.getElementById('post-text').value.trim();
+        const category = document.getElementById('post-category').value;
+        const imageInput = document.getElementById('post-image');
+
+        if (!title && !text && imageInput.files.length === 0) {
+            alert("Заполни хотя бы че то уебище!");
+            return;
+        }
+
+        const newPost = {
+            id: Date.now(),
+            title: title || "Без заголовка",
+            text: text,
+            category: category,
+            image: ""
+        };
+
+        if (imageInput.files && imageInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                newPost.image = e.target.result;
+                saveAndRender(newPost);
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+        } else {
+            saveAndRender(newPost);
+        }
+    }
+
+    function saveAndRender(post) {
+        posts.unshift(post);
+        try {
+            localStorage.setItem('stalinSquadPosts', JSON.stringify(posts));
+        } catch (e) {
+            alert("Ошибка: фотка слишком тяжелая или на ней рада для памяти браузера! Попробуй сжать/вырезать жир её.");
+            posts.shift();
+            return;
+        }
+
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-text').value = '';
+        document.getElementById('post-image').value = '';
+
+        renderPosts();
+    }
+
+    // Удаление поста
+    function deletePost(id) {
+        if (confirm("Точно удалить этот пост?")) {
+            posts = posts.filter(p => p.id !== id);
+            localStorage.setItem('stalinSquadPosts', JSON.stringify(posts));
+            renderPosts();
+        }
+    }
+
+    // Запускаем отрисовку при открытии сайта
+    renderPosts();
+</script>
+</body>
+</html>
