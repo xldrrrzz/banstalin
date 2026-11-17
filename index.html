@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>БАН СТАЛИН | Официальный сайт</title>
-
-    <!-- Подключаем Firebase SDK (база данных в реальном времени) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
         :root {
             --bg-color: #0e0e11;
             --card-bg: #18181f;
-            --accent: #7a1c1c; /* Глубокий бордовый */
+            --accent: #7a1c1c;
             --accent-hover: #9e2424;
             --text-main: #f0f0f5;
             --text-muted: #9a9aa6;
@@ -34,7 +29,6 @@
             padding-bottom: 50px;
         }
 
-        /* Шапка */
         header {
             background: linear-gradient(135deg, #1a0b0b 0%, var(--bg-color) 100%);
             border-bottom: 2px solid var(--accent);
@@ -56,7 +50,6 @@
             margin-top: 10px;
         }
 
-        /* Кнопка админки */
         .admin-trigger {
             position: absolute;
             top: 20px;
@@ -82,7 +75,6 @@
             padding: 0 20px;
         }
 
-        /* Секция "О нас" */
         .about-box {
             background-color: var(--card-bg);
             padding: 25px;
@@ -92,7 +84,6 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
 
-        /* Админ-панель (скрыта по умолчанию) */
         #admin-panel {
             display: none;
             background-color: #1e1518;
@@ -118,7 +109,7 @@
             font-size: 0.9rem;
         }
 
-        input[type="text"], textarea, input[type="file"], select {
+        input[type="text"], input[type="password"], textarea, input[type="file"], select {
             width: 100%;
             padding: 12px;
             background-color: var(--bg-color);
@@ -154,24 +145,46 @@
             margin-left: 10px;
         }
 
-        /* Заголовки секций */
-        .section-title {
-            font-size: 1.6rem;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
             border-bottom: 2px solid #2c2c38;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 22px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: 0.2s;
+        }
+
+        .tab-btn:hover {
             color: var(--text-main);
         }
 
-        .enemies-section {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 2px dashed var(--accent);
+        .tab-btn.active {
+            color: var(--text-main);
+            border-bottom-color: var(--accent-hover);
         }
 
-        .enemies-section .section-title {
+        .tab-btn[data-tab="enemies"].active {
             color: #ff6b6b;
-            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .feed {
@@ -190,10 +203,25 @@
             position: relative;
         }
 
-        /* Особая рамка для карточек врагов */
         .enemy-card {
             border: 1px solid #5a1212;
             background-color: #1c1416;
+        }
+
+        .member-card {
+            border: 1px solid var(--accent);
+        }
+
+        .badge-member {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
 
         .post-card img {
@@ -250,42 +278,383 @@
             display: block;
         }
 
-        /* Стили для кнопки Телеграма в левом нижнем углу */
         .tg-link {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background-color: var(--card-bg);
-            color: var(--text-main);
-            border: 2px solid var(--accent);
-            padding: 12px 20px;
-            border-radius: 14px;
+            display: block;
+            width: fit-content;
+            margin: 40px auto 0;
+            background-color: var(--accent);
+            color: #fff;
             text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 10px;
             font-weight: bold;
-            font-size: 0.95rem;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
             transition: 0.2s;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .tg-link:hover {
-            background-color: var(--accent);
-            transform: translateY(-2px);
+            background-color: var(--accent-hover);
+        }
+
+        /* ===== Новый фон ===== */
+        .bg-aurora {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(158, 36, 36, 0.45), transparent 50%),
+                radial-gradient(ellipse at 85% 25%, rgba(70, 15, 110, 0.38), transparent 55%),
+                radial-gradient(ellipse at 50% 100%, rgba(158, 36, 36, 0.35), transparent 60%),
+                #08080b;
+            background-size: 160% 160%;
+            animation: auroraShift 16s ease-in-out infinite alternate;
+        }
+
+        .bg-aurora::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            -webkit-mask-image: radial-gradient(ellipse at center, #000 25%, transparent 80%);
+            mask-image: radial-gradient(ellipse at center, #000 25%, transparent 80%);
+            animation: gridMove 20s linear infinite;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @keyframes auroraShift {
+            0%   { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        @keyframes gridMove {
+            to { background-position: 48px 48px; }
+        }
+
+        header, .container { position: relative; z-index: 1; }
+
+        header {
+            background: linear-gradient(135deg, rgba(40, 12, 12, 0.75) 0%, rgba(14, 14, 17, 0.45) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+
+        /* бегущая полоска под шапкой */
+        header::after {
+            content: "";
+            position: absolute;
+            left: 0; bottom: -2px;
+            height: 2px; width: 40%;
+            background: linear-gradient(90deg, transparent, #ff4d4d, transparent);
+            animation: slideLine 3.5s ease-in-out infinite;
+        }
+
+        @keyframes slideLine {
+            0%   { left: -40%; }
+            100% { left: 100%; }
+        }
+
+        /* ===== Заголовок: свечение + глитч ===== */
+        header h1 {
+            position: relative;
+            display: inline-block;
+            animation: titleIn 1s cubic-bezier(.2,.8,.2,1) both, glowPulse 3s ease-in-out infinite 1s;
+        }
+
+        header h1::before,
+        header h1::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%;
+            mix-blend-mode: screen;
+            text-shadow: none;
+        }
+
+        header h1::before { color: #ff3b3b; animation: glitchA 5s infinite; }
+        header h1::after  { color: #3bd4ff; animation: glitchB 5s infinite; }
+
+        @keyframes glitchA {
+            0%, 90%, 100% { transform: none; clip-path: inset(0 0 100% 0); }
+            92% { transform: translate(-5px, 0); clip-path: inset(10% 0 60% 0); }
+            95% { transform: translate(4px, 0);  clip-path: inset(60% 0 10% 0); }
+            98% { transform: translate(-2px, 0); clip-path: inset(30% 0 40% 0); }
+        }
+
+        @keyframes glitchB {
+            0%, 90%, 100% { transform: none; clip-path: inset(0 0 100% 0); }
+            93% { transform: translate(5px, 0);  clip-path: inset(50% 0 20% 0); }
+            96% { transform: translate(-4px, 0); clip-path: inset(15% 0 55% 0); }
+            99% { transform: translate(2px, 0);  clip-path: inset(70% 0 5% 0); }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { text-shadow: 0 4px 15px rgba(122, 28, 28, 0.6); }
+            50%      { text-shadow: 0 0 25px rgba(255, 60, 60, 0.9), 0 0 60px rgba(158, 36, 36, 0.7); }
+        }
+
+        @keyframes titleIn {
+            from { opacity: 0; transform: translateY(-30px) scale(0.9); letter-spacing: 14px; }
+            to   { opacity: 1; transform: none; letter-spacing: 3px; }
+        }
+
+        header p { animation: fadeUp 1s ease 0.4s both; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* ===== Блоки и карточки ===== */
+        .about-box {
+            background-color: rgba(24, 24, 31, 0.75);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            animation: slideInLeft 0.8s cubic-bezier(.2,.8,.2,1) 0.3s backwards;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-40px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .post-card {
+            background-color: rgba(24, 24, 31, 0.8);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            animation: riseIn 0.7s cubic-bezier(.2,.8,.2,1) backwards;
+            animation-delay: calc(var(--i, 0) * 90ms);
+            transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+        }
+
+        .enemy-card { background-color: rgba(28, 20, 22, 0.85); }
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(35px) scale(0.95); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .post-card:hover {
+            transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-8px) scale(1.02);
+            box-shadow: 0 16px 40px rgba(158, 36, 36, 0.45), 0 0 0 1px rgba(255, 77, 77, 0.4);
+        }
+
+        .post-card img { transition: transform 0.6s ease; }
+        .post-card:hover img { transform: scale(1.08); }
+        .post-card { overflow: hidden; }
+
+        /* блик, пробегающий по карточке при наведении */
+        .post-card::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -120%;
+            width: 60%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,0.12), transparent);
+            transform: skewX(-20deg);
+            pointer-events: none;
+        }
+
+        .post-card:hover::after {
+            left: 160%;
+            transition: left 0.9s ease;
+        }
+
+        /* ===== Вкладки ===== */
+        .tab-btn { position: relative; }
+
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            left: 50%; bottom: -3px;
+            width: 0; height: 3px;
+            background: #ff4d4d;
+            box-shadow: 0 0 12px #ff4d4d;
+            transition: width 0.35s ease, left 0.35s ease;
+        }
+
+        .tab-btn:hover::after,
+        .tab-btn.active::after { width: 100%; left: 0; }
+
+        .tab-btn.active { border-bottom-color: transparent; }
+
+        .tab-content.active { animation: tabIn 0.5s ease; }
+
+        @keyframes tabIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* ===== Кнопки ===== */
+        .btn, .tg-link { position: relative; overflow: hidden; }
+
+        .btn::after, .tg-link::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+            transform: skewX(-20deg);
+        }
+
+        .btn:hover::after, .tg-link:hover::after {
+            left: 160%;
+            transition: left 0.7s ease;
+        }
+
+        .btn:active { transform: scale(0.96); }
+
+        .admin-trigger:hover { transform: translateY(-2px) rotate(-2deg); box-shadow: 0 6px 18px rgba(158,36,36,0.5); }
+
+        .tg-link { animation: tgPulse 2.5s ease-in-out infinite; }
+
+        @keyframes tgPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.5); }
+            50%      { box-shadow: 0 0 0 14px rgba(255, 77, 77, 0); }
+        }
+
+        #admin-panel { animation: tabIn 0.5s ease; }
+
+        /* ===== Статистика ===== */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat {
+            background: rgba(24, 24, 31, 0.75); backdrop-filter: blur(6px);
+            border: 1px solid #2c2c38; border-radius: var(--border-radius);
+            padding: 18px; text-align: center;
+            animation: riseIn 0.7s cubic-bezier(.2,.8,.2,1) 0.5s backwards;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .stat:hover { transform: translateY(-5px); border-color: var(--accent-hover); }
+        .stat span {
+            display: block; font-size: 2.2rem; font-weight: 800;
+            background: linear-gradient(135deg, #ff6b6b, #ffb36b);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .stat small { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; }
+
+        /* ===== Поиск ===== */
+        .search-wrap { margin-bottom: 22px; }
+        .search-wrap input { border-radius: 30px; padding: 12px 20px; transition: 0.3s; }
+        .search-wrap input:focus { outline: none; border-color: var(--accent-hover); box-shadow: 0 0 18px rgba(158, 36, 36, 0.6); }
+
+        .tab-count {
+            display: inline-block; min-width: 22px; padding: 0 7px; margin-left: 6px;
+            background: #2c2c38; border-radius: 20px; font-size: 0.75rem; line-height: 22px;
+        }
+        .tab-btn.active .tab-count { background: var(--accent); }
+
+        /* ===== Реакции ===== */
+        .reactions { display: flex; gap: 8px; margin-top: 14px; }
+        .react-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid #2c2c38; color: var(--text-main);
+            border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 0.9rem; transition: 0.2s;
+        }
+        .react-btn:hover { background: rgba(158, 36, 36, 0.5); border-color: var(--accent-hover); }
+        .react-btn.pop { animation: pop 0.35s ease; }
+        @keyframes pop { 50% { transform: scale(1.35); } }
+
+        /* ===== Лайтбокс ===== */
+        .post-card img { cursor: zoom-in; }
+        #lightbox {
+            position: fixed; inset: 0; z-index: 9998; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.92); cursor: zoom-out;
+        }
+        #lightbox.open { display: flex; animation: tabIn 0.3s ease; }
+        #lightbox img { max-width: 92vw; max-height: 90vh; border-radius: 14px; box-shadow: 0 0 60px rgba(158, 36, 36, 0.7); animation: riseIn 0.4s ease; }
+
+        /* ===== Свечение за курсором ===== */
+        .cursor-glow {
+            position: fixed; left: 0; top: 0; width: 420px; height: 420px; margin: -210px 0 0 -210px;
+            border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0;
+            background: radial-gradient(circle, rgba(255, 60, 60, 0.17), transparent 65%);
+            transition: opacity 0.4s;
+        }
+        @media (hover: none) { .cursor-glow { display: none; } }
+
+        /* ===== Кнопка наверх ===== */
+        .to-top {
+            position: fixed; right: 24px; bottom: 24px; z-index: 50;
+            width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--accent); color: #fff; font-size: 1.3rem;
+            opacity: 0; transform: translateY(20px); pointer-events: none;
+            transition: 0.3s; box-shadow: 0 6px 20px rgba(158, 36, 36, 0.6);
+        }
+        .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+        .to-top:hover { background: var(--accent-hover); transform: translateY(-4px); }
+
+        /* ===== Firebase UI ===== */
+        .fb-warning {
+            display: none; background: #3a2a0a; border: 1px solid #b8860b; color: #ffd36b;
+            padding: 16px 20px; border-radius: var(--border-radius); margin-bottom: 25px; font-size: 0.95rem;
+        }
+        .fb-warning code { background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 5px; }
+
+        #login-modal {
+            position: fixed; inset: 0; z-index: 9997; display: none;
+            align-items: center; justify-content: center; background: rgba(0,0,0,0.8);
+        }
+        #login-modal.open { display: flex; animation: tabIn 0.3s ease; }
+        .login-box {
+            width: min(380px, 90vw); background: #1e1518; border: 2px solid var(--accent);
+            border-radius: var(--border-radius); padding: 28px; box-shadow: 0 0 50px rgba(158,36,36,0.5);
+            animation: riseIn 0.4s ease;
+        }
+        .login-box h2 { margin-bottom: 18px; color: #ff6b6b; }
+        .login-box input { margin-bottom: 12px; }
+
+        .toast {
+            position: fixed; left: 50%; bottom: 30px; z-index: 10000;
+            transform: translate(-50%, 30px); opacity: 0; pointer-events: none;
+            background: #1e1518; border: 1px solid var(--accent-hover); color: var(--text-main);
+            padding: 12px 22px; border-radius: 30px; box-shadow: 0 8px 30px rgba(158,36,36,0.5);
+            transition: 0.35s;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        .online-dot {
+            display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            background: #3bd46b; margin-right: 6px; box-shadow: 0 0 10px #3bd46b;
+            animation: tgPulse 2s infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
+<div class="bg-aurora"></div>
+<canvas id="bg-canvas"></canvas>
+<div class="cursor-glow" id="cursor-glow"></div>
+<div class="toast" id="toast"></div>
+<div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" alt=""></div>
+<button class="to-top" id="to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх">↑</button>
+
 <header>
     <button class="admin-trigger" onclick="toggleAdminAuth()">Добавить пост💌</button>
-    <h1>БАН СТАЛИН</h1>
+    <h1 data-text="БАН СТАЛИН">БАН СТАЛИН</h1>
     <p>Официанальный))) сайт бан сталин. Только уебища ебаные заслуживают тут находится.</p>
 </header>
 
 <div class="container">
+
+    <div class="fb-warning" id="fb-warning">
+        ⚠️ Firebase ещё не настроен. Вставь свой <code>firebaseConfig</code> в начало скрипта в файле — и посты начнут сохраняться в базе.
+    </div>
 
     <!-- Админ-панель -->
     <div id="admin-panel">
@@ -302,6 +671,7 @@
             <label>Куда добавить пост:</label>
             <select id="post-category">
                 <option value="squad">Обычный пост сквада</option>
+                <option value="members">👥 Участник бан сталин</option>
                 <option value="enemies">⚔️ Наши враги</option>
             </select>
         </div>
@@ -309,7 +679,8 @@
             <label>Выбрать фотку еблища</label>
             <input type="file" id="post-image" accept="image/*">
         </div>
-        <button class="btn" onclick="addPost()">Опубликовать</button>
+        <button class="btn" id="publish-btn" onclick="addPost()">Опубликовать</button>
+        <button class="btn btn-logout" onclick="importLocal()">Импорт из этого браузера</button>
         <button class="btn btn-logout" onclick="logoutAdmin()">Выйти из админки</button>
     </div>
 
@@ -321,123 +692,247 @@
         </p>
     </div>
 
-    <!-- Блок 1: Основные посты -->
-    <h2 class="section-title">Посты сквада</h2>
-    <div class="feed" id="feed-squad"></div>
+    <!-- Статистика -->
+    <div class="stats">
+        <div class="stat"><span id="stat-days">0</span><small>дней с основания</small></div>
+        <div class="stat"><span id="stat-members">0</span><small>участников</small></div>
+        <div class="stat"><span id="stat-posts">0</span><small>постов</small></div>
+        <div class="stat"><span id="stat-enemies">0</span><small>врагов</small></div>
+        <div class="stat"><span id="stat-online">0</span><small><i class="online-dot"></i>онлайн сейчас</small></div>
+    </div>
 
-    <!-- Блок 2: Наши враги -->
-    <div class="enemies-section">
-        <h2 class="section-title">⚔️ Наши враги</h2>
+    <!-- Вкладки -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="squad" onclick="switchTab('squad')">Посты сквада <span class="tab-count" id="count-squad">0</span></button>
+        <button class="tab-btn" data-tab="members" onclick="switchTab('members')">👥 Участники <span class="tab-count" id="count-members">0</span></button>
+        <button class="tab-btn" data-tab="enemies" onclick="switchTab('enemies')">⚔️ Наши враги <span class="tab-count" id="count-enemies">0</span></button>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="search" placeholder="🔍 Поиск по всем постам..." oninput="onSearch(this.value)">
+    </div>
+
+    <div class="tab-content active" id="tab-squad">
+        <div class="feed" id="feed-squad"></div>
+    </div>
+
+    <div class="tab-content" id="tab-members">
+        <div class="feed" id="feed-members"></div>
+    </div>
+
+    <div class="tab-content" id="tab-enemies">
         <div class="feed" id="feed-enemies"></div>
     </div>
 
+    <a href="https://t.me/banstalin" target="_blank" class="tg-link">✈️ НАШ ТГК</a>
+
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-    const ADMIN_PASSWORD = "fuckradadiona";
-    let isAdmin = false;
-
-    // --- НАСТРОЙКА FIREBASE ---
-    // Используем публичный тестовый проект для мгновенного старта базы данных
+    // ===== Firebase: ВСТАВЬ СВОЙ КОНФИГ (Project settings → Your apps → Web) =====
     const firebaseConfig = {
         apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
         authDomain: "banstalinbd.firebaseapp.com",
+        // Если база создана в Европе, замени на: https://banstalinbd-default-rtdb.europe-west1.firebasedatabase.app
+        databaseURL: "https://banstalinbd-default-rtdb.firebaseio.com",
         projectId: "banstalinbd",
         storageBucket: "banstalinbd.firebasestorage.app",
         messagingSenderId: "177781168542",
         appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
         measurementId: "G-3F0JK75D6H"
-
     };
+    const ADMIN_PASSWORD = "fuckradadiona";
+    const FIREBASE_READY = !String(firebaseConfig.apiKey).startsWith('ВСТАВЬ');
 
-    // Инициализация Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
-
+    let db = null;
+    let isAdmin = false, loaded = false, lastSig = '';
     let posts = [];
 
-    // Живая загрузка постов из базы данных (обновляется у всех автоматически)
-    function initRealtimeDatabase() {
-        db.collection("posts").orderBy("id", "desc").onSnapshot((snapshot) => {
-            posts = [];
-            snapshot.forEach((doc) => {
-                posts.push(doc.data());
-            });
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.classList.remove('show'), 3200);
+    }
 
-            // Если в базе вообще пусто, добавляем стартовый пост
-            if (posts.length === 0) {
-                const initialPost = {
-                    id: 1,
-                    title: "Основание - 19.01.2026",
-                    text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.",
-                    category: "squad",
-                    image: ""
-                };
-                db.collection("posts").doc(String(initialPost.id)).set(initialPost);
-            } else {
-                renderPosts();
-            }
-        }, (error) => {
-            console.log("Ошибка базы данных, переключаемся на локальную память:", error);
-            // Защита: если нет сети или базы, берем из localStorage чтобы сайт не ломался
-            posts = JSON.parse(localStorage.getItem('stalinSquadPosts')) || [
-                { id: 1, title: "Основание - 19.01.2026", text: "С этого момента начинается история нашего сквада. Дальше — Хуевее.", category: "squad", image: "" }
-            ];
-            renderPosts();
+    function esc(str) {
+        return String(str == null ? '' : str).replace(/[&<>"']/g, c => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
+    }
+
+    // Переключение вкладок
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.tab === name);
+        });
+        document.querySelectorAll('.tab-content').forEach(c => {
+            c.classList.toggle('active', c.id === 'tab-' + name);
         });
     }
 
-    // Функция отрисовки постов по двум отдельным блокам
-    function renderPosts() {
-        const feedSquad = document.getElementById('feed-squad');
-        const feedEnemies = document.getElementById('feed-enemies');
+    let searchQuery = '';
+    const FOUNDED = new Date(2026, 0, 19);
 
-        feedSquad.innerHTML = '';
-        feedEnemies.innerHTML = '';
-
-        const squadPosts = posts.filter(p => p.category !== 'enemies');
-        const enemyPosts = posts.filter(p => p.category === 'enemies');
-
-        if (squadPosts.length === 0) {
-            feedSquad.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">Постов пока нет.</p>`;
-        } else {
-            squadPosts.forEach(post => feedSquad.appendChild(createPostCard(post, false)));
-        }
-
-        if (enemyPosts.length === 0) {
-            feedEnemies.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">Список врагов пока пуст.</p>`;
-        } else {
-            enemyPosts.forEach(post => feedEnemies.appendChild(createPostCard(post, true)));
-        }
+    function animateNumber(el, to) {
+        const from = parseInt(el.textContent) || 0;
+        if (from === to) { el.textContent = to; return; }
+        const start = performance.now(), dur = 1200;
+        (function step(now) {
+            const k = Math.min(1, (now - start) / dur);
+            el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+            if (k < 1) requestAnimationFrame(step);
+        })(start);
     }
 
-    // Создание HTML карточки
-    function createPostCard(post, isEnemy) {
+    function onSearch(v) {
+        searchQuery = v.trim().toLowerCase();
+        renderPosts();
+    }
+
+    function renderPosts() {
+        const feeds = {
+            squad: document.getElementById('feed-squad'),
+            members: document.getElementById('feed-members'),
+            enemies: document.getElementById('feed-enemies')
+        };
+        const empty = {
+            squad: 'Постов пока нет.',
+            members: 'Участников пока нет.',
+            enemies: 'Список врагов пока пуст.'
+        };
+
+        Object.values(feeds).forEach(f => f.innerHTML = '');
+
+        const all = {
+            squad: posts.filter(p => p.category !== 'enemies' && p.category !== 'members'),
+            members: posts.filter(p => p.category === 'members'),
+            enemies: posts.filter(p => p.category === 'enemies')
+        };
+
+        Object.keys(feeds).forEach(kind => {
+            const list = searchQuery
+                ? all[kind].filter(p => (p.title + ' ' + p.text).toLowerCase().includes(searchQuery))
+                : all[kind];
+            if (list.length === 0) {
+                feeds[kind].innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">${searchQuery ? 'Ничего не найдено 🕳️' : (loaded ? empty[kind] : 'Загрузка из базы… ⏳')}</p>`;
+            } else {
+                list.forEach((post, i) => {
+                    const card = createPostCard(post, kind);
+                    card.style.setProperty('--i', i);
+                    feeds[kind].appendChild(card);
+                });
+            }
+            document.getElementById('count-' + kind).textContent = all[kind].length;
+        });
+
+        animateNumber(document.getElementById('stat-members'), all.members.length);
+        animateNumber(document.getElementById('stat-enemies'), all.enemies.length);
+        animateNumber(document.getElementById('stat-posts'), posts.length);
+        animateNumber(document.getElementById('stat-days'), Math.max(0, Math.floor((Date.now() - FOUNDED) / 86400000)));
+    }
+
+    function createPostCard(post, kind) {
         const card = document.createElement('div');
-        card.className = isEnemy ? 'post-card enemy-card' : 'post-card';
+        card.className = 'post-card' + (kind === 'enemies' ? ' enemy-card' : kind === 'members' ? ' member-card' : '');
 
         let imageHTML = '';
         if (post.image) {
-            imageHTML = `<img src="${post.image}" alt="Фото банстален">`;
+            imageHTML = `<img src="${post.image}" alt="Фото банстален" onclick="openLightbox(this.src)">`;
         }
 
-        let badgeHTML = isEnemy ? `<span class="badge-enemy">⚔️ Враг сквада</span>` : '';
+        let badgeHTML = '';
+        if (kind === 'enemies') badgeHTML = `<span class="badge-enemy">⚔️ Враг сквада</span>`;
+        if (kind === 'members') badgeHTML = `<span class="badge-member">👥 Участник</span>`;
 
+        const r = post.reactions || {};
         card.innerHTML = `
-            <button class="delete-btn" onclick="deletePost(${post.id})">Удалить</button>
+            <button class="delete-btn" onclick="deletePost('${post.id}')">Удалить</button>
             ${imageHTML}
             <div class="post-content">
                 ${badgeHTML}
-                <h3 class="post-title">${post.title}</h3>
-                <p class="post-text">${post.text}</p>
+                <h3 class="post-title">${esc(post.title)}</h3>
+                <p class="post-text">${esc(post.text)}</p>
+                <div class="reactions">
+                    <button class="react-btn" data-rid="${post.id}" data-rkey="fire" onclick="react('${post.id}', 'fire', this)">🔥 <b>${r.fire || 0}</b></button>
+                    <button class="react-btn" data-rid="${post.id}" data-rkey="skull" onclick="react('${post.id}', 'skull', this)">💀 <b>${r.skull || 0}</b></button>
+                    <button class="react-btn" data-rid="${post.id}" data-rkey="heart" onclick="react('${post.id}', 'heart', this)">❤️ <b>${r.heart || 0}</b></button>
+                </div>
             </div>
         `;
         return card;
     }
 
-    // Вход в админку по паролю
+    function react(id, key, btn) {
+        if (!db) { toast('Firebase не настроен'); return; }
+        db.ref('posts/' + id + '/reactions/' + key)
+            .transaction(v => (v || 0) + 1)
+            .catch(e => toast('Не удалось поставить реакцию: ' + (e.code || e.message)));
+        btn.classList.remove('pop');
+        void btn.offsetWidth;
+        btn.classList.add('pop');
+    }
+
+    // обновляем счётчики реакций на месте, без перерисовки карточек
+    function updateReactionsInPlace() {
+        posts.forEach(p => ['fire', 'skull', 'heart'].forEach(k => {
+            document.querySelectorAll('[data-rid="' + p.id + '"][data-rkey="' + k + '"] b').forEach(el => {
+                el.textContent = (p.reactions && p.reactions[k]) || 0;
+            });
+        }));
+    }
+
+    function openLightbox(src) {
+        document.getElementById('lightbox-img').src = src;
+        document.getElementById('lightbox').classList.add('open');
+    }
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    // Конфетти
+    function confetti() {
+        const c = document.createElement('canvas');
+        c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:9999;pointer-events:none';
+        c.width = innerWidth; c.height = innerHeight;
+        document.body.appendChild(c);
+        const ctx = c.getContext('2d');
+        const colors = ['#ff4d4d', '#9e2424', '#ffffff', '#ffb36b', '#8a4dff'];
+        const bits = Array.from({ length: 140 }, () => ({
+            x: innerWidth / 2, y: innerHeight * 0.6,
+            vx: (Math.random() - 0.5) * 18, vy: -Math.random() * 18 - 4,
+            s: Math.random() * 8 + 4, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
+            col: colors[Math.floor(Math.random() * colors.length)]
+        }));
+        let frames = 0;
+        (function tick() {
+            ctx.clearRect(0, 0, c.width, c.height);
+            bits.forEach(b => {
+                b.vy += 0.4; b.x += b.vx; b.y += b.vy; b.rot += b.vr; b.vx *= 0.99;
+                ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot);
+                ctx.fillStyle = b.col; ctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2);
+                ctx.restore();
+            });
+            if (++frames < 180) requestAnimationFrame(tick); else c.remove();
+        })();
+    }
+
+    function requireAdmin() {
+        if (!db) { toast('Firebase не настроен — вставь конфиг в код'); return false; }
+        if (!isAdmin) { toast('Нужно войти как админ'); return false; }
+        return true;
+    }
+
+    function setAdmin(on) {
+        isAdmin = on;
+        document.body.classList.toggle('is-admin', on);
+        document.getElementById('admin-panel').style.display = on ? 'block' : 'none';
+    }
+
     function toggleAdminAuth() {
         if (isAdmin) {
             alert("Ты уже в режиме админа еблан!");
@@ -445,83 +940,246 @@
         }
         const inputPass = prompt("Введи пароль для поста:");
         if (inputPass === ADMIN_PASSWORD) {
-            isAdmin = true;
-            document.body.classList.add('is-admin');
-            document.getElementById('admin-panel').style.display = 'block';
+            setAdmin(true);
         } else if (inputPass !== null) {
             alert("Неверный пароль! Доступ запрещён сын хуесоса.");
         }
     }
 
-    // Выход из админки
     function logoutAdmin() {
-        isAdmin = false;
-        document.body.classList.remove('is-admin');
-        document.getElementById('admin-panel').style.display = 'none';
+        setAdmin(false);
     }
 
-    // Добавление нового поста с отправкой в базу данных
-    function addPost() {
+    // Сжимаем фото перед отправкой в базу (иначе она быстро распухнет)
+    function compressImage(file, maxSide = 900, quality = 0.72) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+                const c = document.createElement('canvas');
+                c.width = Math.round(img.width * k);
+                c.height = Math.round(img.height * k);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                resolve(c.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    }
+
+    async function addPost() {
+        if (!requireAdmin()) return;
         const title = document.getElementById('post-title').value.trim();
         const text = document.getElementById('post-text').value.trim();
         const category = document.getElementById('post-category').value;
-        const imageInput = document.getElementById('post-image');
+        const file = document.getElementById('post-image').files[0];
 
-        if (!title && !text && imageInput.files.length === 0) {
+        if (!title && !text && !file) {
             alert("Заполни хотя бы че то уебище!");
             return;
         }
 
-        const newPost = {
-            id: Date.now(),
-            title: title || "Без заголовка",
-            text: text,
-            category: category,
-            image: ""
-        };
-
-        if (imageInput.files && imageInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                newPost.image = e.target.result;
-                saveToDatabase(newPost);
+        const btn = document.getElementById('publish-btn');
+        btn.disabled = true;
+        btn.textContent = 'Публикую…';
+        try {
+            const post = {
+                title: title || "Без заголовка",
+                text: text,
+                category: category,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
             };
-            reader.readAsDataURL(imageInput.files[0]);
-        } else {
-            saveToDatabase(newPost);
+            if (file) post.image = await compressImage(file);
+            await db.ref('posts').push(post);
+
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-text').value = '';
+            document.getElementById('post-image').value = '';
+            confetti();
+            switchTab(category === 'enemies' || category === 'members' ? category : 'squad');
+        } catch (e) {
+            toast('Ошибка публикации: ' + (e.code || e.message));
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Опубликовать';
         }
     }
 
-    // Сохранение поста в Firebase Firestore
-    function saveToDatabase(post) {
-        db.collection("posts").doc(String(post.id)).set(post)
-            .then(() => {
-                document.getElementById('post-title').value = '';
-                document.getElementById('post-text').value = '';
-                document.getElementById('post-image').value = '';
-            })
-            .catch((error) => {
-                alert("Ошибка загрузки в базу (возможно, фотка слишком тяжелая): " + error.message);
-            });
-    }
-
-    // Удаление поста из базы данных
     function deletePost(id) {
+        if (!requireAdmin()) return;
         if (confirm("Точно удалить этот пост?")) {
-            db.collection("posts").doc(String(id)).delete().catch((error) => {
-                alert("Ошибка удаления: " + error.message);
-            });
+            db.ref('posts/' + id).remove().catch(e => toast('Не удалось удалить: ' + (e.code || e.message)));
         }
     }
 
-    // Запускаем подключение к базе при открытии сайта
-    initRealtimeDatabase();
-</script>
+    // Перенос старых постов из localStorage этого браузера в базу
+    function importLocal() {
+        if (!requireAdmin()) return;
+        let local = [];
+        try { local = JSON.parse(localStorage.getItem('stalinSquadPosts') || '[]'); } catch (e) {}
+        if (!local.length) { toast('В этом браузере старых постов нет'); return; }
+        if (!confirm('Импортировать постов: ' + local.length + '?')) return;
 
-<!-- Ссылка на ТГК в левом нижнем углу -->
-<a href="https://t.me/banstalin" target="_blank" class="tg-link">
-    ✈️ НАШ ТГК
-</a>
+        const updates = {};
+        local.forEach(p => {
+            const key = db.ref('posts').push().key;
+            const obj = {
+                title: p.title || 'Без заголовка',
+                text: p.text || '',
+                category: p.category || 'squad',
+                createdAt: Number(p.id) || Date.now()
+            };
+            if (p.image) obj.image = p.image;
+            if (p.reactions) obj.reactions = p.reactions;
+            updates[key] = obj;
+        });
+        db.ref('posts').update(updates)
+            .then(() => { localStorage.removeItem('stalinSquadPosts'); toast('Импортировано: ' + local.length); })
+            .catch(e => toast('Ошибка импорта: ' + (e.code || e.message)));
+    }
+
+    function initFirebase() {
+        if (!FIREBASE_READY) {
+            document.getElementById('fb-warning').style.display = 'block';
+            loaded = true;
+            renderPosts();
+            return;
+        }
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+
+        // Посты в реальном времени
+        db.ref('posts').orderByChild('createdAt').on('value', snap => {
+            const list = [];
+            snap.forEach(child => { list.unshift({ id: child.key, ...child.val() }); });
+            const sig = list.map(p => [p.id, p.category, p.title, p.text, (p.image || '').length].join('|')).join('~');
+            posts = list;
+            if (!loaded || sig !== lastSig) {
+                loaded = true;
+                lastSig = sig;
+                renderPosts();
+            } else {
+                updateReactionsInPlace();
+            }
+        }, err => {
+            loaded = true;
+            renderPosts();
+            toast('Ошибка чтения базы: ' + (err.code || err.message));
+        });
+
+        // Онлайн сейчас (presence)
+        db.ref('.info/connected').on('value', snap => {
+            if (snap.val() === true) {
+                const me = db.ref('presence').push();
+                me.onDisconnect().remove();
+                me.set(true);
+            }
+        });
+        db.ref('presence').on('value', snap => {
+            animateNumber(document.getElementById('stat-online'), snap.numChildren());
+        });
+    }
+
+    renderPosts();
+    initFirebase();
+
+    // ===== Фон: летящие искры =====
+    (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, sparks = [];
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function spawn(initial) {
+            return {
+                x: Math.random() * w,
+                y: initial ? Math.random() * h : h + 10,
+                r: Math.random() * 2.2 + 0.6,
+                vy: Math.random() * 0.7 + 0.25,
+                sway: Math.random() * 1.5 + 0.5,
+                phase: Math.random() * Math.PI * 2,
+                alpha: Math.random() * 0.6 + 0.3,
+                hue: Math.random() * 25 + 355
+            };
+        }
+
+        const count = Math.min(90, Math.floor(window.innerWidth / 14));
+        for (let i = 0; i < count; i++) sparks.push(spawn(true));
+
+        let t = 0;
+        function frame() {
+            t += 0.01;
+            ctx.clearRect(0, 0, w, h);
+            for (let i = 0; i < sparks.length; i++) {
+                const s = sparks[i];
+                s.y -= s.vy;
+                s.x += Math.sin(t * s.sway + s.phase) * 0.5;
+                if (s.y < -10) sparks[i] = spawn(false);
+
+                const fade = Math.min(1, s.y / (h * 0.3));
+                ctx.beginPath();
+                ctx.fillStyle = 'hsla(' + s.hue + ', 90%, 55%, ' + (s.alpha * fade) + ')';
+                ctx.shadowColor = 'rgba(255, 60, 60, 0.9)';
+                ctx.shadowBlur = 12;
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(frame);
+        }
+        frame();
+    })();
+
+    // Свечение за курсором + 3D-наклон карточек + кнопка "наверх"
+    (function () {
+        const glow = document.getElementById('cursor-glow');
+        const toTop = document.getElementById('to-top');
+        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let tx = 0, ty = 0, cx = 0, cy = 0, started = false;
+
+        document.addEventListener('mousemove', e => {
+            tx = e.clientX; ty = e.clientY;
+            if (!started) { started = true; cx = tx; cy = ty; glow.style.opacity = 1; loop(); }
+
+            if (calm) return;
+            const card = e.target.closest && e.target.closest('.post-card');
+            if (card) {
+                const r = card.getBoundingClientRect();
+                const px = (e.clientX - r.left) / r.width - 0.5;
+                const py = (e.clientY - r.top) / r.height - 0.5;
+                card.style.setProperty('--ry', (px * 12) + 'deg');
+                card.style.setProperty('--rx', (-py * 12) + 'deg');
+            }
+        });
+
+        document.addEventListener('mouseout', e => {
+            const card = e.target.closest && e.target.closest('.post-card');
+            if (card && !card.contains(e.relatedTarget)) {
+                card.style.setProperty('--rx', '0deg');
+                card.style.setProperty('--ry', '0deg');
+            }
+        });
+
+        function loop() {
+            cx += (tx - cx) * 0.12;
+            cy += (ty - cy) * 0.12;
+            glow.style.transform = 'translate(' + cx + 'px,' + cy + 'px)';
+            requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('scroll', () => {
+            toTop.classList.toggle('show', window.scrollY > 300);
+        }, { passive: true });
+    })();
+</script>
 
 </body>
 </html>
