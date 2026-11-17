@@ -1066,9 +1066,22 @@
         }
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
+        // long polling обходит блокировки WebChannel (adblock, VPN, прокси, песочницы предпросмотра)
+        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+        let gotFirst = false;
+        setTimeout(() => {
+            if (!gotFirst) {
+                const w = document.getElementById('fb-warning');
+                w.style.display = 'block';
+                w.textContent = '⚠️ Не удаётся достучаться до Firestore. Проверь: открыт ли сайт в обычном браузере (не в окне предпросмотра), выключены ли adblock/VPN, создана ли база Firestore в проекте banstalinbd.';
+            }
+        }, 8000);
 
         // Посты в реальном времени
         db.collection('posts').orderBy('createdAt', 'desc').onSnapshot(snap => {
+            gotFirst = true;
+            document.getElementById('fb-warning').style.display = 'none';
             const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const sig = list.map(p => [p.id, p.category, p.title, p.text, (p.image || '').length].join('|')).join('~');
             posts = list;
