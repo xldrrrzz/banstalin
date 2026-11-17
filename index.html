@@ -698,7 +698,6 @@
         <div class="stat"><span id="stat-members">0</span><small>участников</small></div>
         <div class="stat"><span id="stat-posts">0</span><small>постов</small></div>
         <div class="stat"><span id="stat-enemies">0</span><small>врагов</small></div>
-        <div class="stat"><span id="stat-online">0</span><small><i class="online-dot"></i>онлайн сейчас</small></div>
     </div>
 
     <!-- Вкладки -->
@@ -729,19 +728,18 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
     // ===== Firebase: ВСТАВЬ СВОЙ КОНФИГ (Project settings → Your apps → Web) =====
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
-  authDomain: "banstalinbd.firebaseapp.com",
-  projectId: "banstalinbd",
-  storageBucket: "banstalinbd.firebasestorage.app",
-  messagingSenderId: "177781168542",
-  appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
-  measurementId: "G-3F0JK75D6H"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
+        authDomain: "banstalinbd.firebaseapp.com",
+        projectId: "banstalinbd",
+        storageBucket: "banstalinbd.firebasestorage.app",
+        messagingSenderId: "177781168542",
+        appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
+        measurementId: "G-3F0JK75D6H"
+    };
     const ADMIN_PASSWORD = "fuckradadiona";
     const FIREBASE_READY = !String(firebaseConfig.apiKey).startsWith('ВСТАВЬ');
 
@@ -867,8 +865,8 @@ const firebaseConfig = {
 
     function react(id, key, btn) {
         if (!db) { toast('Firebase не настроен'); return; }
-        db.ref('posts/' + id + '/reactions/' + key)
-            .transaction(v => (v || 0) + 1)
+        db.collection('posts').doc(id)
+            .update({ ['reactions.' + key]: firebase.firestore.FieldValue.increment(1) })
             .catch(e => toast('Не удалось поставить реакцию: ' + (e.code || e.message)));
         btn.classList.remove('pop');
         void btn.offsetWidth;
@@ -988,10 +986,16 @@ const firebaseConfig = {
                 title: title || "Без заголовка",
                 text: text,
                 category: category,
-                createdAt: firebase.database.ServerValue.TIMESTAMP
+                createdAt: Date.now()
             };
-            if (file) post.image = await compressImage(file);
-            await db.ref('posts').push(post);
+            if (file) {
+                // документ Firestore не должен весить больше ~1 МБ, поэтому жмём сильнее, если надо
+                let img = await compressImage(file);
+                if (img.length > 900000) img = await compressImage(file, 600, 0.6);
+                if (img.length > 900000) throw new Error('фото слишком тяжёлое');
+                post.image = img;
+            }
+            await db.collection('posts').add(post);
 
             document.getElementById('post-title').value = '';
             document.getElementById('post-text').value = '';
@@ -1009,7 +1013,7 @@ const firebaseConfig = {
     function deletePost(id) {
         if (!requireAdmin()) return;
         if (confirm("Точно удалить этот пост?")) {
-            db.ref('posts/' + id).remove().catch(e => toast('Не удалось удалить: ' + (e.code || e.message)));
+            db.collection('posts').doc(id).delete().catch(e => toast('Не удалось удалить: ' + (e.code || e.message)));
         }
     }
 
@@ -1021,9 +1025,8 @@ const firebaseConfig = {
         if (!local.length) { toast('В этом браузере старых постов нет'); return; }
         if (!confirm('Импортировать постов: ' + local.length + '?')) return;
 
-        const updates = {};
+        const batch = db.batch();
         local.forEach(p => {
-            const key = db.ref('posts').push().key;
             const obj = {
                 title: p.title || 'Без заголовка',
                 text: p.text || '',
@@ -1032,9 +1035,9 @@ const firebaseConfig = {
             };
             if (p.image) obj.image = p.image;
             if (p.reactions) obj.reactions = p.reactions;
-            updates[key] = obj;
+            batch.set(db.collection('posts').doc(), obj);
         });
-        db.ref('posts').update(updates)
+        batch.commit()
             .then(() => { localStorage.removeItem('stalinSquadPosts'); toast('Импортировано: ' + local.length); })
             .catch(e => toast('Ошибка импорта: ' + (e.code || e.message)));
     }
@@ -1047,12 +1050,11 @@ const firebaseConfig = {
             return;
         }
         firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
+        db = firebase.firestore();
 
         // Посты в реальном времени
-        db.ref('posts').orderByChild('createdAt').on('value', snap => {
-            const list = [];
-            snap.forEach(child => { list.unshift({ id: child.key, ...child.val() }); });
+        db.collection('posts').orderBy('createdAt', 'desc').onSnapshot(snap => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const sig = list.map(p => [p.id, p.category, p.title, p.text, (p.image || '').length].join('|')).join('~');
             posts = list;
             if (!loaded || sig !== lastSig) {
@@ -1066,18 +1068,6 @@ const firebaseConfig = {
             loaded = true;
             renderPosts();
             toast('Ошибка чтения базы: ' + (err.code || err.message));
-        });
-
-        // Онлайн сейчас (presence)
-        db.ref('.info/connected').on('value', snap => {
-            if (snap.val() === true) {
-                const me = db.ref('presence').push();
-                me.onDisconnect().remove();
-                me.set(true);
-            }
-        });
-        db.ref('presence').on('value', snap => {
-            animateNumber(document.getElementById('stat-online'), snap.numChildren());
         });
     }
 
