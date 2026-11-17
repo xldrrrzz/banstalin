@@ -732,17 +732,16 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
     // ===== Firebase: ВСТАВЬ СВОЙ КОНФИГ (Project settings → Your apps → Web) =====
-    const firebaseConfig = {
-        apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
-        authDomain: "banstalinbd.firebaseapp.com",
-        // Если база создана в Европе, замени на: https://banstalinbd-default-rtdb.europe-west1.firebasedatabase.app
-        databaseURL: "https://banstalinbd-default-rtdb.firebaseio.com",
-        projectId: "banstalinbd",
-        storageBucket: "banstalinbd.firebasestorage.app",
-        messagingSenderId: "177781168542",
-        appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
-        measurementId: "G-3F0JK75D6H"
-    };
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAU9aWUAOebvVS-wpLxQY4casVHHMC_5Mg",
+  authDomain: "banstalinbd.firebaseapp.com",
+  projectId: "banstalinbd",
+  storageBucket: "banstalinbd.firebasestorage.app",
+  messagingSenderId: "177781168542",
+  appId: "1:177781168542:web:2211470c9ba3ee7b21de8f",
+  measurementId: "G-3F0JK75D6H"
+};
     const ADMIN_PASSWORD = "fuckradadiona";
     const FIREBASE_READY = !String(firebaseConfig.apiKey).startsWith('ВСТАВЬ');
 
